@@ -7,7 +7,7 @@ import javax.persistence.*;
 public class BankAccount {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", nullable = false)
     private Long id;
 
