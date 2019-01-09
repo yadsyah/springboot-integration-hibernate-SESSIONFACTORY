@@ -53,8 +53,8 @@ public class HibernateConfiguration {
         properties.put("hibernate.dialect", environment.getProperty("spring.jpa.properties.hibernate.dialect"));
         properties.put("hibernate.show_sql", environment.getProperty("spring.jpa.show-sql"));
         properties.put("current_session_context_class", environment.getProperty("spring.jpa.properties.hibernate.current_session_context_class"));
-        properties.put("hibernate.hbm2ddl,auto",environment.getProperty("hibernate.hbm2ddl.auto"));
-
+        properties.put("hibernate.hbm2ddl.auto",environment.getProperty("hibernate.hbm2ddl.auto"));
+        properties.put("hibernate.id.new_generator_mappings",false);
 
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setPackagesToScan(ENTITYMANAGER_PACKAGES_TO_SCAN);
