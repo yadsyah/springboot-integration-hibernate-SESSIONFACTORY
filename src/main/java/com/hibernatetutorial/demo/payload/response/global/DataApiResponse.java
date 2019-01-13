@@ -1,6 +1,10 @@
 package com.hibernatetutorial.demo.payload.response.global;
 
+import java.util.Date;
+
 public class DataApiResponse {
+
+    private Long timestamp;
 
     private boolean success;
 
@@ -9,6 +13,14 @@ public class DataApiResponse {
     public DataApiResponse(boolean success, Object data) {
         this.success = success;
         this.data = data;
+    }
+
+    public Long getTimestamp() {
+        return new Date().getTime();
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 
     public boolean isSuccess() {
