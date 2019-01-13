@@ -1,22 +1,32 @@
 package com.hibernatetutorial.demo.service;
 
 import com.hibernatetutorial.demo.constant.UtilityConstant;
+import com.hibernatetutorial.demo.constant.UtilityConstant.*;
+import com.hibernatetutorial.demo.dao.CustomerAlamatDAO;
 import com.hibernatetutorial.demo.dao.CustomerDAO;
 import com.hibernatetutorial.demo.dao.CustomerDetailDAO;
 import com.hibernatetutorial.demo.entity.Customer;
+import com.hibernatetutorial.demo.entity.CustomerAlamat;
 import com.hibernatetutorial.demo.entity.CustomerDetail;
+import com.hibernatetutorial.demo.exception.NoResultException;
 import com.hibernatetutorial.demo.exception.ParsingDateException;
 import com.hibernatetutorial.demo.exception.ResourceNotFoundException;
+import com.hibernatetutorial.demo.payload.request.CustomerAlamatRequest;
 import com.hibernatetutorial.demo.payload.request.CustomerRequest;
+import com.hibernatetutorial.demo.payload.response.CustomerDetailResponse;
 import com.hibernatetutorial.demo.payload.response.CustomerResponse;
 import com.hibernatetutorial.demo.payload.response.global.DataApiResponse;
 
+import com.hibernatetutorial.demo.repositoryjpa.CustomerRepositoryJPA;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.beans.BeanInfo;
 import java.lang.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,104 +34,215 @@ import org.slf4j.LoggerFactory;
 public class CustomerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerService.class);
-    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
     @Autowired
     CustomerDAO customerDAO;
 
     @Autowired
     CustomerDetailDAO customerDetailDAO;
 
-    // @Autowired(required=true)
-    // CustomerRepositoryJPA customerRepositoryJPA;
+    @Autowired
+    CustomerAlamatDAO customerAlamatDAO;
 
-    // @Autowired(required=true)
-    // CustomerDetailRepository customerDetailRepository;
+    @Autowired
+    CustomerRepositoryJPA customerRepositoryJPA;
 
-    public CustomerResponse getOneCustomerResponse(Long id) {
+
+    public DataApiResponse getOneCustomerResponse(Long id) {
+        Class methodName = new Object() {}.getClass();
+        LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
             Customer customer = customerDAO.findByIdCustomer(id);
             if (customer == null) {
-                throw new ResourceNotFoundException(id.toString());
+                LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+                return new DataApiResponse(false, "Data Not Found!");
             }
             CustomerResponse customerResponse = new CustomerResponse();
             customer.setCustomerId(customer.getCustomerId());
             customerResponse.setName(customer.getName());
             customerResponse.setEmail(customer.getEmail());
-            return customerResponse;
+            LOGGER.info("Data : {}", customerResponse);
+            LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(true, customerResponse);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(false, e.getMessage());
         }
     }
 
-    public List<CustomerResponse> getAllCustomerResponse() {
+    public DataApiResponse getAllCustomerResponse() {
+        Class methodName = new Object() {
+        }.getClass();
+        LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
             List<Object[]> listObject = customerDAO.joinCustomerAndDetail();
             List<CustomerResponse> customerResponses = new ArrayList<>();
 
-            for (Object[] objects : listObject) {
-                Customer customer = (Customer) objects[0];
-                CustomerDetail customerDetail = (CustomerDetail) objects[1];
-                CustomerResponse customerResponse = new CustomerResponse();
-                customerResponse.setCustomerId(customer.getCustomerId());
-                customerResponse.setName(customer.getName());
-                customerResponse.setEmail(customer.getEmail());
-                customerResponse.setCustomerDetail(customerDetail != null ? customerDetail : null);
-                customerResponses.add(customerResponse);
+            if (!listObject.isEmpty()) {
+                for (Object[] objects : listObject) {
+                    Customer customer = (Customer) objects[0];
+                    CustomerDetail customerDetail = (CustomerDetail) objects[1];
+                    CustomerResponse customerResponse = new CustomerResponse();
+                    customerResponse.setCustomerId(customer.getCustomerId());
+                    customerResponse.setName(customer.getName());
+                    customerResponse.setEmail(customer.getEmail());
+                    CustomerDetailResponse customerDetailRes = new CustomerDetailResponse();
+                    customerDetailRes.setAdult(customerDetail.isAdult());
+                    customerDetailRes.setCustomerDetailId(customerDetail.getCustomerDetailId());
+                    customerDetailRes.setJenisKelamin(customerDetail.getJenisKelamin());
+                    customerDetailRes.setNoKTP(customerDetail.getNoKTP());
+                    customerDetailRes.setTglLahir(customerDetail.getTglLahir() != null ? UtilityConstant.dateFormat.format(customerDetail.getTglLahir()) : null);
+                    customerResponse.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
+                    List<CustomerAlamat> customerAlamats = customerAlamatDAO.findOneIdCustomerAlamatNotPK(customer.getCustomerId());
+                    if (!customerAlamats.isEmpty()) {
+                        customerResponse.setCustomerAlamats(customerAlamats);
+                    }
+                    customerResponses.add(customerResponse);
+                }
+                LOGGER.info("Data Size : {}", customerResponses.size());
+                LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+                return new DataApiResponse(true, customerResponses);
             }
-            return customerResponses;
+            LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(true, "Data Not Found!");
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(false, e.getMessage());
         }
     }
 
-    public CustomerResponse getOneCustomerAndDetailResponse(Long id) {
+    public DataApiResponse getOneCustomerAndDetailResponse(Long id) {
+        Class methodName = new Object() {
+        }.getClass();
+        LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
             Object[] objects = customerDAO.findByIdJoinCustomerAndDetail(id);
+            if (objects == null) {
+                LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+                return new DataApiResponse(false, "Data Not Found! `" + id + "`");
+            }
+            LOGGER.info("Data : {}", objects);
             Customer customer = (Customer) objects[0];
             CustomerDetail customerDetail = (CustomerDetail) objects[1];
             CustomerResponse customerResponse = new CustomerResponse();
             customerResponse.setCustomerId(customer.getCustomerId());
             customerResponse.setEmail(customer.getEmail());
             customerResponse.setName(customer.getName());
-            customerResponse.setCustomerDetail(customerDetail);
-            return customerResponse;
+            CustomerDetailResponse customerDetailRes = new CustomerDetailResponse();
+            customerDetailRes.setAdult(customerDetail.isAdult());
+            customerDetailRes.setCustomerDetailId(customerDetail.getCustomerDetailId());
+            customerDetailRes.setJenisKelamin(customerDetail.getJenisKelamin());
+            customerDetailRes.setNoKTP(customerDetail.getNoKTP());
+            customerDetailRes.setTglLahir(customerDetail.getTglLahir() != null ? UtilityConstant.dateFormat.format(customerDetail.getTglLahir()) : null);
+            customerResponse.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
+            LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(true, customerResponse);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(false, e.getMessage());
         }
     }
 
     public DataApiResponse saveCustomerAndDetail(CustomerRequest customerRequest) {
-        Object methodName = new Object(){}.getClass();
+        Class methodName = new Object() {
+        }.getClass();
+        LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
             if (!UtilityConstant.isDatePattern(customerRequest.getTglLahir())) {
-                throw new ParsingDateException(customerRequest.getTglLahir());
+                LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+                return new DataApiResponse(false, "Parsing Date Error");
             }
-            LOGGER.info("existByEmail : {}", customerDAO.existByEmail(customerRequest.getEmail()));
             if (customerDAO.existByEmail(customerRequest.getEmail())) {
+                LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
                 return new DataApiResponse(false, "Exists By Email Customer");
             }
             if (customerDAO.existByNoKTP(customerRequest.getNoKTP().toString())) {
-                return new DataApiResponse(false,"Exists By No KTP Customer");
+                LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+                return new DataApiResponse(false, "Exists By No KTP Customer");
             }
-            
+
             Customer newCustomer = new Customer();
             CustomerDetail customerDetail = new CustomerDetail();
+            CustomerAlamat customerAlamat = new CustomerAlamat();
+
             customerDetail.setAdult(customerRequest.isAdult());
             customerDetail.setJenisKelamin(customerRequest.getJenisKelamin());
             customerDetail.setNoKTP(customerRequest.getNoKTP());
-            customerDetail.setTglLahir(dateFormat.parse(customerRequest.getTglLahir()));
-            customerDAO.persistCustomer(customerDetail);
+            customerDetail.setTglLahir(UtilityConstant.dateFormat.parse(customerRequest.getTglLahir()));
             newCustomer.setEmail(customerRequest.getEmail());
             newCustomer.setName(customerRequest.getName());
+            customerDetailDAO.persistCustomerDetail(customerDetail);
             newCustomer.setCustomerDetailId(customerDetail.getCustomerDetailId());
             customerDAO.persistCustomerAndDetail(newCustomer, customerDetail);
-            return new DataApiResponse(true,"Success saveCustomerAndDetail");
+            customerAlamat.setCustomerId(newCustomer.getCustomerId());
+            customerAlamat.setKodePos(customerRequest.getKodePos());
+            customerAlamat.setNamaAlamat(customerRequest.getNamaAlamat());
+            customerAlamat.setNegara(customerRequest.getNegara());
+            customerAlamatDAO.persistCustomerAlamat(customerAlamat);
+            LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(true, "Save Data!");
         } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error("Error : {}", e.getMessage());
+            LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
+            return new DataApiResponse(false, e.getMessage());
+        }
+    }
+
+    public DataApiResponse addAlamatByCustomerId(CustomerAlamatRequest customerAlamat) {
+        try {
+
+            Customer customer = customerDAO.findByIdCustomer(customerAlamat.getCustomerId());
+            if (customer == null) {
+                return new DataApiResponse(false, "Customer Id `"+customerAlamat.getCustomerId()+"` Not Found!");
+            }
+            CustomerAlamat addCustomerAlamat = new CustomerAlamat();
+            addCustomerAlamat.setNegara(customerAlamat.getNegara());
+            addCustomerAlamat.setNamaAlamat(customerAlamat.getNamaAlamat());
+            addCustomerAlamat.setKodePos(customerAlamat.getKodePos());
+            addCustomerAlamat.setCustomerId(customer.getCustomerId());
+            customerAlamatDAO.persistCustomerAlamat(addCustomerAlamat);
+            return new DataApiResponse(true, "Success Add Alamat by Customer Id " + customerAlamat.getCustomerId());
+        } catch (NoResultException e) {
+            return new DataApiResponse(false, "Data Not Found " + customerAlamat.getCustomerId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new DataApiResponse(false, e.getMessage());
+        }
+    }
+
+
+    public DataApiResponse checkEmailExisting(String email){
+        try{
+            if(customerRepositoryJPA.existsByEmail(email)){
+                return new DataApiResponse(true,true);
+            }
+            return new DataApiResponse(true,false);
+        } catch (Exception e){
             e.printStackTrace();
             return new DataApiResponse(false,e.getMessage());
         }
+
     }
+
+    public DataApiResponse searchCustomerByCustomerName(String customerName){
+        try{
+//            List<Customer> customerList = customerDAO.findIdCustomerLikeCustomerName(customerName);
+            List<Customer> customerList = customerDAO.hibernateSearchCustomer(customerName);
+            if(customerList!=null){
+                if(!customerList.isEmpty()){
+                   return new DataApiResponse(true,customerList);
+                }
+            }
+            return new DataApiResponse(false,"Data Not Found");
+        } catch (Exception e){
+            e.printStackTrace();
+            return new DataApiResponse(false,e.getMessage());
+        }
+
+    }
+
+
 }

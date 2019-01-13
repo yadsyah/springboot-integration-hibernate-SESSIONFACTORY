@@ -50,8 +50,7 @@ public class CustomerDetailDAO {
 
     public void persistCustomerDetail(CustomerDetail customerDetail){
         Session session = getSessionFactory();
-        session.beginTransaction();
-        session.save(customerDetail);
+        session.persist(customerDetail);
     }
 
     public void saveOrUpdateCustomerDetail(CustomerDetail customerDetail){

@@ -1,8 +1,12 @@
 package com.hibernatetutorial.demo.payload.response;
 
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.hibernatetutorial.demo.entity.Customer;
+import com.hibernatetutorial.demo.entity.CustomerAlamat;
 import com.hibernatetutorial.demo.entity.CustomerDetail;
 import com.hibernatetutorial.demo.payload.request.global.ApiDataRequest;
+
+import java.util.List;
 
 public class CustomerResponse {
 
@@ -12,13 +16,13 @@ public class CustomerResponse {
 
     private String email;
 
-    private CustomerDetail customerDetail;
-
+    private CustomerDetailResponse customerDetail;
+    private List<CustomerAlamat> customerAlamats;
     public CustomerResponse() {
 
     }
 
-    public CustomerResponse(Long customerId, String name, String email, CustomerDetail customerDetail) {
+    public CustomerResponse(Long customerId, String name, String email, CustomerDetailResponse customerDetail) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
@@ -49,11 +53,19 @@ public class CustomerResponse {
         this.email = email;
     }
 
-    public CustomerDetail getCustomerDetail() {
+    public CustomerDetailResponse getCustomerDetail() {
         return customerDetail;
     }
 
-    public void setCustomerDetail(CustomerDetail customerDetail) {
+    public void setCustomerDetail(CustomerDetailResponse customerDetail) {
         this.customerDetail = customerDetail;
+    }
+
+    public List<CustomerAlamat> getCustomerAlamats() {
+        return customerAlamats;
+    }
+
+    public void setCustomerAlamats(List<CustomerAlamat> customerAlamats) {
+        this.customerAlamats = customerAlamats;
     }
 }

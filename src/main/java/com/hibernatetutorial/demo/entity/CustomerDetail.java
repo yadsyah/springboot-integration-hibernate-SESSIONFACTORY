@@ -1,26 +1,28 @@
 package com.hibernatetutorial.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.hibernatetutorial.demo.constant.UtilityConstant;
 
 import org.hibernate.validator.constraints.Range;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Date;
 
 @Entity
-public class CustomerDetail {
+public class CustomerDetail implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     private long customerDetailId;
 
-    @Min(16)
-    @Max(16)
-    @Range(min = 16,max = 16, message="No KTP 16 digit")
-    private Long noKTP;
+    private String noKTP;
 
     private String jenisKelamin;
 
@@ -31,7 +33,7 @@ public class CustomerDetail {
     public CustomerDetail() {
     }
 
-    public CustomerDetail(@Min(16) @Max(16) Long noKTP, String jenisKelamin, boolean isAdult, Date tglLahir) {
+    public CustomerDetail(@Min(16) @Max(16) String noKTP, String jenisKelamin, boolean isAdult, Date tglLahir) {
         this.noKTP = noKTP;
         this.jenisKelamin = jenisKelamin;
         this.isAdult = isAdult;
@@ -46,11 +48,11 @@ public class CustomerDetail {
         this.customerDetailId = customerDetailId;
     }
 
-    public Long getNoKTP() {
+    public String getNoKTP() {
         return noKTP;
     }
 
-    public void setNoKTP(Long noKTP) {
+    public void setNoKTP(String noKTP) {
         this.noKTP = noKTP;
     }
 
@@ -77,4 +79,11 @@ public class CustomerDetail {
     public void setTglLahir(Date tglLahir) {
         this.tglLahir = tglLahir;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        return sb.append("{").append("customerDetailId").append(":").append(this.getCustomerDetailId()).append("}").toString();
+    }
+
 }
