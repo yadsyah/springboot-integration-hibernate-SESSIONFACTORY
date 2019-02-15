@@ -1,0 +1,17 @@
+
+${AnsiColor.MAGENTA},------.   ,--.                                 ,---.
+${AnsiColor.MAGENTA}|  .-.  \  `--' ,--. ,--.  ,--,--. ,--,--,     /  O  \   ,---.   ,---.
+${AnsiColor.MAGENTA}|  |  \  : ,--.  \  '  /  ' ,-.  | |      \   |  .-.  | | .-. | | .-. |
+${AnsiColor.MAGENTA}|  '--'  / |  |   \   '   \ '-'  | |  ||  |   |  | |  | | '-' ' | '-' '
+${AnsiColor.MAGENTA}`-------'  `--' .-'  /     `--`--' `--''--'   `--' `--' |  |-'  |  |-'
+${AnsiColor.MAGENTA}                `---'                                   `--'    `--'
+
+--------------------------------------------------------------------------
+Application Name : ${application.title}
+Application Version : ${application.version}
+Application Formatted Version : ${application.formatted-version}
+Spring Boot Version : ${spring-boot-version}
+Spring Boot Formatted Version : ${spring-boot.formatted-version}
+--------------------------------------------------------------------------
+${AnsiColor.BRIGHT_RED}	 Spring boot My Application Diyan
+--------------------------------------------------------------------------
