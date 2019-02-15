@@ -14,7 +14,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.List;
 
-@Transactional
+@Transactional(value = "sfTX")
 @Repository
 public class CustomerAlamatDAO {
 
@@ -34,15 +34,27 @@ public class CustomerAlamatDAO {
         }
     }
 
-    public List<CustomerAlamat> findOneIdCustomerAlamatNotPK(Long id) {
+    public void saveOrUpdate(CustomerAlamat customerAlamat){
+        try{
+            Session session = getSessionFactory();
+            session.saveOrUpdate(customerAlamat);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public List<CustomerAlamat> findOneIdCustomerAlamatNotPK(Long customerId) {
         try {
             Session session = getSessionFactory();
             CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<CustomerAlamat> query = criteriaBuilder.createQuery(CustomerAlamat.class);
             Root<CustomerAlamat> customerAlamatRoot = query.from(CustomerAlamat.class);
-            query.select(customerAlamatRoot).where(criteriaBuilder.equal(customerAlamatRoot.get("customerId"), id));
+            query.select(customerAlamatRoot).where(criteriaBuilder.equal(customerAlamatRoot.get("customerId"), customerId));
             Query<CustomerAlamat> q = session.createQuery(query);
-            return q.getResultList();
+            if(!q.getResultList().isEmpty()){
+                return q.getResultList();
+            }
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -64,11 +76,20 @@ public class CustomerAlamatDAO {
         }
     }
 
-    public void persistCustomerAlamat(CustomerAlamat customerAlamat){
+    public void saveCustomerAlamat(CustomerAlamat customerAlamat){
         try{
             Session session = getSessionFactory();
             session.save(customerAlamat);
         } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void persistCustomerAlamat(CustomerAlamat customerAlamat){
+        try{
+            Session session = getSessionFactory();
+            session.persist(customerAlamat);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

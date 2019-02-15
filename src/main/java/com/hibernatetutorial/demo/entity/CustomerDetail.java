@@ -15,6 +15,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 @Entity
+@Table(name = "customerdetail")
 public class CustomerDetail implements Serializable {
 
     @Id

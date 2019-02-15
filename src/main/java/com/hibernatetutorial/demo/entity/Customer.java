@@ -9,6 +9,7 @@ import javax.validation.constraints.Email;
 
 @Indexed
 @Entity
+@Table(name = "customer")
 public class Customer {
 
     @Id

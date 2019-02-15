@@ -1,5 +1,6 @@
 package com.hibernatetutorial.demo.controller;
 
+import com.hibernatetutorial.demo.entity.Customer;
 import com.hibernatetutorial.demo.payload.request.CustomerAlamatRequest;
 import com.hibernatetutorial.demo.payload.request.CustomerRequest;
 import com.hibernatetutorial.demo.constant.UtilityConstant;
@@ -8,6 +9,7 @@ import com.hibernatetutorial.demo.dao.CustomerDAO;
 import com.hibernatetutorial.demo.entity.BankAccount;
 import com.hibernatetutorial.demo.payload.response.CustomerResponse;
 import com.hibernatetutorial.demo.payload.response.global.DataApiResponse;
+import com.hibernatetutorial.demo.repositoryjpa.CustomerRepositoryJPA;
 import com.hibernatetutorial.demo.service.CustomerService;
 
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.xml.crypto.Data;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api")
 public class ApiController {
@@ -38,6 +41,9 @@ public class ApiController {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    CustomerRepositoryJPA customerRepositoryJPA;
 
     @GetMapping("/banks")
     public ResponseEntity<?> getAllAccountBank() {
@@ -87,6 +93,19 @@ public class ApiController {
         return new ResponseEntity(context, HttpStatus.NOT_FOUND);
     }
 
+    @GetMapping(value = "/customer/em",produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> getCustomerEM(){
+        try{
+            List<Customer> customerList = customerRepositoryJPA.findAll();
+            return ResponseEntity.ok(customerList);
+        } catch (Exception e){
+            e.printStackTrace();
+            return new ResponseEntity(new DataApiResponse(false,e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+    @CrossOrigin
     @PostMapping(value = "/customer", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> saveCustomerAndDetail(@Valid @RequestBody CustomerRequest customer) {
         try {
@@ -94,7 +113,7 @@ public class ApiController {
             if (response.isSuccess()) {
                 return ResponseEntity.ok(response);
             }
-            return new ResponseEntity(new DataApiResponse(false, response.getData().toString()),
+            return new ResponseEntity(new DataApiResponse(false, response.getData().toString(),response.getMessage()),
                     HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
             e.printStackTrace();
@@ -102,6 +121,7 @@ public class ApiController {
         }
     }
 
+    @CrossOrigin
     @GetMapping(value = "/customersCB", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getAllCustomers() {
         try {
@@ -115,10 +135,10 @@ public class ApiController {
         }
     }
 
+    @CrossOrigin
     @GetMapping(value = "/customerCB/{customerId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getOneCustomerCB(@PathVariable("customerId") Long id) {
-        Class methodName = new Object() {
-        }.getClass();
+        Class methodName = new Object() {}.getClass();
         try {
             LOGGER.info(UtilityConstant.INFO_SERVICE.START_CONTROLLER.getDescription(methodName));
             DataApiResponse customerResponse = customerService.getOneCustomerAndDetailResponse(id);
@@ -133,6 +153,20 @@ public class ApiController {
             return new ResponseEntity(new DataApiResponse(false, e.getMessage()), HttpStatus.BAD_REQUEST);
         }
 
+    }
+
+    @PostMapping(value = "/delete/customer", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteCustomerById(@RequestBody Long customerId) {
+        try {
+            DataApiResponse apiResponse = customerService.deleteCustomerById(customerId);
+            if (apiResponse.isSuccess()) {
+                return ResponseEntity.ok(apiResponse);
+            }
+            return new ResponseEntity(apiResponse, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity(new DataApiResponse(false, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping(value = "/add/alamat", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -161,8 +195,22 @@ public class ApiController {
     }
 
     @GetMapping(value = "/search/{customerName}/customer", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> searchCustomer(@PathVariable(value = "customerName",required = true)String customerName){
+    public ResponseEntity<?> searchCustomer(@PathVariable(value = "customerName", required = true) String customerName) {
         DataApiResponse apiResponse = customerService.searchCustomerByCustomerName(customerName);
-        return ResponseEntity.ok(apiResponse);
+        if (apiResponse.isSuccess()) {
+            return ResponseEntity.ok(apiResponse);
+        }
+        return new ResponseEntity(apiResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @PostMapping(value = "/update/{customerId}",consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateCustomer(@PathVariable(value = "customerId")Long customerId, @RequestBody CustomerResponse customerResponse){
+        try{
+            DataApiResponse apiResponse = customerService.updateCustomerByCustomerId(customerId,customerResponse);
+            return ResponseEntity.ok(apiResponse);
+        } catch(Exception e){
+            e.printStackTrace();
+            return new ResponseEntity(new DataApiResponse(false,e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

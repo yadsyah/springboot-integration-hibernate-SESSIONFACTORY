@@ -1,5 +1,7 @@
 package com.hibernatetutorial.demo.payload.response.global;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Date;
 
 public class DataApiResponse {
@@ -10,9 +12,18 @@ public class DataApiResponse {
 
     private Object data;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String message;
+
     public DataApiResponse(boolean success, Object data) {
         this.success = success;
         this.data = data;
+    }
+
+    public DataApiResponse(boolean success, Object data, String message) {
+        this.success = success;
+        this.data = data;
+        this.message = message;
     }
 
     public Long getTimestamp() {
@@ -37,5 +48,13 @@ public class DataApiResponse {
 
     public void setData(Object data) {
         this.data = data;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

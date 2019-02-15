@@ -3,7 +3,6 @@ package com.hibernatetutorial.demo.dao;
 import com.hibernatetutorial.demo.entity.BankAccount;
 import com.hibernatetutorial.demo.exception.BankTransactionException;
 import com.hibernatetutorial.demo.exception.ResourceNotFoundException;
-import com.hibernatetutorial.demo.model.BankAccountInfo;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -22,7 +21,7 @@ import javax.persistence.criteria.Root;
 import java.util.List;
 
 @Repository
-@Transactional
+@Transactional(value = "sfTX")
 public class BankAccountDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BankAccountDAO.class);
@@ -98,14 +97,6 @@ public class BankAccountDAO {
             e.printStackTrace();
             return null;
         }
-    }
-
-    public List<BankAccountInfo> listBankAccountInfo() {
-        String sql = "Select new " + BankAccountInfo.class.getName() + "(e.id , e.fullName, e.balance)" +
-                " from" + BankAccount.class.getName() + " e";
-        Session session = getSession();
-        Query<BankAccountInfo> query = session.createQuery(sql, BankAccountInfo.class);
-        return query.getResultList();
     }
 
     public void addAmount(Long id, double amount) throws BankTransactionException, ResourceNotFoundException {

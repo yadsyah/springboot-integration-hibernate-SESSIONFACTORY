@@ -3,7 +3,6 @@ package com.hibernatetutorial.demo.dao;
 import com.hibernatetutorial.demo.entity.CustomerAlamat;
 import com.hibernatetutorial.demo.entity.Customer;
 import com.hibernatetutorial.demo.entity.CustomerDetail;
-import com.hibernatetutorial.demo.payload.response.global.DataApiResponse;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
@@ -13,7 +12,6 @@ import org.hibernate.search.query.dsl.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +24,6 @@ import java.util.List;
 @Repository
 @Transactional(value = "sfTX")
 public class CustomerDAO {
-
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomerDAO.class);
     @Autowired
@@ -47,6 +44,14 @@ public class CustomerDAO {
         return customerQuery.setMaxResults(100).getResultList();
     }
 
+    public void deleteCustomer(Customer customer){
+        try{
+            Session session = getSessionFactory();
+            session.delete(customer);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     public Customer findByIdCustomer(Long id) {
         Session session = getSessionFactory();
         CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
@@ -67,7 +72,8 @@ public class CustomerDAO {
             Root<Customer> customerRoot = criteriaQuery.from(Customer.class);
             Root<CustomerDetail> customerDetailRoot = criteriaQuery.from(CustomerDetail.class);
             criteriaQuery.multiselect(customerRoot, customerDetailRoot);
-            criteriaQuery.where(criteriaBuilder.equal(customerDetailRoot.get("customerDetailId"), customerRoot.get("customerDetailId")));
+            criteriaQuery.where(criteriaBuilder.equal(customerDetailRoot.get("customerDetailId"),
+                    customerRoot.get("customerDetailId")));
             Query<Object[]> query = getSessionFactory().createQuery(criteriaQuery);
             List<Object[]> list = query.getResultList();
             return list;
@@ -83,15 +89,14 @@ public class CustomerDAO {
             CriteriaQuery<Object[]> criteriaQuery = cb.createQuery(Object[].class);
             Root<Customer> customerRoot = criteriaQuery.from(Customer.class);
             Root<CustomerDetail> customerDetailRoot = criteriaQuery.from(CustomerDetail.class);
-            Root<CustomerAlamat> customerAlamatRoot = criteriaQuery.from(CustomerAlamat.class);
-
-            criteriaQuery.multiselect(customerRoot, customerDetailRoot, customerAlamatRoot);
+            criteriaQuery.multiselect(customerRoot, customerDetailRoot);
             criteriaQuery.where(cb.equal(customerRoot.get("customerId"), id),
-                    cb.equal(customerRoot.get("customerDetailId"), customerDetailRoot.get("customerDetailId")),
-                    cb.equal(customerAlamatRoot.get("customerId"), customerRoot.get("customerId")));
+                    cb.equal(customerDetailRoot.get("customerDetailId"), customerRoot.get("customerDetailId")));
             Query<Object[]> query = getSessionFactory().createQuery(criteriaQuery);
+            if(query.getResultList().isEmpty()){
+                return null;
+            }
             Object[] objects = query.getSingleResult();
-
             return objects;
         } catch (NoResultException e) {
             LOGGER.error("Error : Data Not Found! `{}`", id);
@@ -102,7 +107,7 @@ public class CustomerDAO {
         }
     }
 
-    public void persistCustomerAndDetail(Customer customer, CustomerDetail customerDetail) {
+    public void saveCustomerAndDetail(Customer customer, CustomerDetail customerDetail) {
         try {
             Session session = getSessionFactory();
             session.save(customerDetail);
@@ -130,7 +135,6 @@ public class CustomerDAO {
             return null;
         }
     }
-
 
     public Boolean existByNoKTP(String noKTP) {
         try {
@@ -189,5 +193,14 @@ public class CustomerDAO {
             return null;
         }
         return null;
+    }
+
+    public void saveOrUpdate(Customer customer){
+        try{
+            Session session = getSessionFactory();
+            session.saveOrUpdate(customer);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

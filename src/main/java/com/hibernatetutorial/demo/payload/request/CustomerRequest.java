@@ -5,6 +5,7 @@ import javax.persistence.*;
 
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Date;
 
@@ -19,8 +20,6 @@ public class CustomerRequest {
     private String noKTP;
     @NotEmpty(message = "Jenis Kelamin is Not Empty")
     private String jenisKelamin;
-    @NotNull
-    private boolean isAdult;
 
     private String tglLahir;
 
@@ -61,15 +60,6 @@ public class CustomerRequest {
     public void setJenisKelamin(String jenisKelamin) {
         this.jenisKelamin = jenisKelamin;
     }
-
-    public boolean isAdult() {
-        return isAdult;
-    }
-
-    public void setAdult(boolean adult) {
-        isAdult = adult;
-    }
-
     public String getTglLahir() {
         return tglLahir;
     }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -23,13 +24,15 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackages = "com.hibernatetutorial.demo.repositoryjpa")
+@EnableJpaRepositories(basePackages = "com.hibernatetutorial.demo.repositoryjpa",transactionManagerRef = "emTX")
 public class HibernateConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DemoApplication.class);
@@ -39,9 +42,6 @@ public class HibernateConfiguration {
 
     @Value("${entitymanager.packagesToScan}")
     private String ENTITYMANAGER_PACKAGES_TO_SCAN;
-
-
-
 
     @Bean
     public DataSource dataSource() {
@@ -60,8 +60,6 @@ public class HibernateConfiguration {
     @Bean
     public LocalSessionFactoryBean sessionFactory() throws Exception {
         Properties properties = new Properties();
-        LOGGER.info("hibernate.show_sql : {}", environment.getProperty("spring.jpa.show-sql"));
-        LOGGER.info("current_session_context_class : {}", environment.getProperty("spring.jpa.properties.hibernate.current_session_context_class"));
 
         // Hibernate Properties
         properties.put("hibernate.dialect", environment.getProperty("spring.jpa.properties.hibernate.dialect"));
@@ -74,6 +72,7 @@ public class HibernateConfiguration {
         properties.put("hibernate.search.default.directory_provider","filesystem");
         properties.put("hibernate.search.default.indexBase","G:/Testter/HibernateSearch/index");
         properties.put("hibernate.search.default.indexwriter.infostream",true);
+        LOGGER.info("Properties SessionFactory : {}",properties.toString());
         LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
         sessionFactory.setPackagesToScan(ENTITYMANAGER_PACKAGES_TO_SCAN);
         sessionFactory.setDataSource(dataSource());
@@ -84,6 +83,7 @@ public class HibernateConfiguration {
     }
 
     @Bean
+    @PersistenceContext(unitName = "emTX")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         vendorAdapter.setDatabase(Database.MYSQL);
@@ -91,11 +91,11 @@ public class HibernateConfiguration {
 
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setPackagesToScan(ENTITYMANAGER_PACKAGES_TO_SCAN);
-        em.setPersistenceUnitName("name");
+        em.setPersistenceUnitName("emTX");
         em.setDataSource(dataSource());
         em.setJpaVendorAdapter(vendorAdapter);
         em.setJpaProperties(additionalProperties());
-
+        LOGGER.info("Properties JPA : {}",additionalProperties().toString());
         return em;
     }
 
@@ -109,9 +109,9 @@ public class HibernateConfiguration {
         return properties;
     }
 
+    @Primary
     @Bean(value = "sfTX")
     @ConditionalOnMissingBean(HibernateTransactionManager.class)
-    @Primary
     public HibernateTransactionManager getTransactionManager(@Qualifier("sessionFactory") SessionFactory sessionFactory) {
         HibernateTransactionManager transactionManager = new HibernateTransactionManager();
         transactionManager.setSessionFactory(sessionFactory);
@@ -123,8 +123,6 @@ public class HibernateConfiguration {
     public JpaTransactionManager transactionManager(@Qualifier("entityManagerFactory") EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(entityManagerFactory);
-
         return transactionManager;
     }
-
 }
