@@ -8,21 +8,19 @@ import com.hibernatetutorial.demo.payload.request.global.ApiDataRequest;
 
 import java.util.List;
 
-public class CustomerResponse {
+public class CustomerRequest {
 
     private Long customerId;
-
     private String name;
-
     private String email;
-
     private CustomerDetailResponse customerDetail;
+    private String noKTP;
     private List<CustomerAlamat> customerAlamats;
-    public CustomerResponse() {
+    public CustomerRequest() {
 
     }
 
-    public CustomerResponse(Long customerId, String name, String email, CustomerDetailResponse customerDetail) {
+    public CustomerRequest(Long customerId, String name, String email, CustomerDetailResponse customerDetail) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
@@ -67,5 +65,13 @@ public class CustomerResponse {
 
     public void setCustomerAlamats(List<CustomerAlamat> customerAlamats) {
         this.customerAlamats = customerAlamats;
+    }
+
+    public String getNoKTP() {
+        return noKTP;
+    }
+
+    public void setNoKTP(String noKTP) {
+        this.noKTP = noKTP;
     }
 }

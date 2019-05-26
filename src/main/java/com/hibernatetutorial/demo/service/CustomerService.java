@@ -1,5 +1,6 @@
 package com.hibernatetutorial.demo.service;
 
+import com.google.gson.Gson;
 import com.hibernatetutorial.demo.constant.UtilityConstant;
 import com.hibernatetutorial.demo.constant.UtilityConstant.*;
 import com.hibernatetutorial.demo.dao.CustomerAlamatDAO;
@@ -8,11 +9,11 @@ import com.hibernatetutorial.demo.dao.CustomerDetailDAO;
 import com.hibernatetutorial.demo.entity.Customer;
 import com.hibernatetutorial.demo.entity.CustomerAlamat;
 import com.hibernatetutorial.demo.entity.CustomerDetail;
+import com.hibernatetutorial.demo.entity.TblUser;
 import com.hibernatetutorial.demo.exception.NoResultException;
 import com.hibernatetutorial.demo.payload.request.CustomerAlamatRequest;
-import com.hibernatetutorial.demo.payload.request.CustomerRequest;
 import com.hibernatetutorial.demo.payload.response.CustomerDetailResponse;
-import com.hibernatetutorial.demo.payload.response.CustomerResponse;
+import com.hibernatetutorial.demo.payload.response.CustomerRequest;
 import com.hibernatetutorial.demo.payload.response.global.DataApiResponse;
 
 import com.hibernatetutorial.demo.repositoryjpa.CustomerRepositoryJPA;
@@ -20,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.lang.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -53,13 +56,13 @@ public class CustomerService {
                 LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
                 return new DataApiResponse(false, "Data Not Found!");
             }
-            CustomerResponse customerResponse = new CustomerResponse();
+            CustomerRequest customerRequest = new CustomerRequest();
             customer.setCustomerId(customer.getCustomerId());
-            customerResponse.setName(customer.getName());
-            customerResponse.setEmail(customer.getEmail());
-            LOGGER.info("Data : {}", customerResponse);
+            customerRequest.setName(customer.getName());
+            customerRequest.setEmail(customer.getEmail());
+            LOGGER.info("Data : {}", customerRequest);
             LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
-            return new DataApiResponse(true, customerResponse);
+            return new DataApiResponse(true, customerRequest);
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
@@ -73,32 +76,32 @@ public class CustomerService {
         LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
             List<Object[]> listObject = customerDAO.joinCustomerAndDetail();
-            List<CustomerResponse> customerResponses = new ArrayList<>();
+            List<CustomerRequest> customerRespons = new ArrayList<>();
 
             if (!listObject.isEmpty()&&listObject!=null) {
                 for (Object[] objects : listObject) {
                     Customer customer = (Customer) objects[0];
                     CustomerDetail customerDetail = (CustomerDetail) objects[1];
-                    CustomerResponse customerResponse = new CustomerResponse();
-                    customerResponse.setCustomerId(customer.getCustomerId());
-                    customerResponse.setName(customer.getName());
-                    customerResponse.setEmail(customer.getEmail());
+                    CustomerRequest customerRequest = new CustomerRequest();
+                    customerRequest.setCustomerId(customer.getCustomerId());
+                    customerRequest.setName(customer.getName());
+                    customerRequest.setEmail(customer.getEmail());
                     CustomerDetailResponse customerDetailRes = new CustomerDetailResponse();
                     customerDetailRes.setAdult(customerDetail.isAdult());
                     customerDetailRes.setCustomerDetailId(customerDetail.getCustomerDetailId());
                     customerDetailRes.setJenisKelamin(customerDetail.getJenisKelamin());
                     customerDetailRes.setNoKTP(customerDetail.getNoKTP());
                     customerDetailRes.setTglLahir(customerDetail.getTglLahir() != null ? UtilityConstant.dateFormat.format(customerDetail.getTglLahir()) : null);
-                    customerResponse.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
+                    customerRequest.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
                     List<CustomerAlamat> customerAlamats = customerAlamatDAO.findOneIdCustomerAlamatNotPK(customer.getCustomerId());
                     if (!customerAlamats.isEmpty()) {
-                        customerResponse.setCustomerAlamats(customerAlamats);
+                        customerRequest.setCustomerAlamats(customerAlamats);
                     }
-                    customerResponses.add(customerResponse);
+                    customerRespons.add(customerRequest);
                 }
-                LOGGER.info("Data Size : {}", customerResponses.size());
+                LOGGER.info("Data Size : {}", customerRespons.size());
                 LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
-                return new DataApiResponse(true, customerResponses);
+                return new DataApiResponse(true, customerRespons);
             }
             LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
             return new DataApiResponse(true, "Data Not Found!");
@@ -122,23 +125,23 @@ public class CustomerService {
             LOGGER.info("Data : {}", objects);
             Customer customer = (Customer) objects[0];
             CustomerDetail customerDetail = (CustomerDetail) objects[1];
-            CustomerResponse customerResponse = new CustomerResponse();
-            customerResponse.setCustomerId(customer.getCustomerId());
-            customerResponse.setEmail(customer.getEmail());
-            customerResponse.setName(customer.getName());
+            CustomerRequest customerRequest = new CustomerRequest();
+            customerRequest.setCustomerId(customer.getCustomerId());
+            customerRequest.setEmail(customer.getEmail());
+            customerRequest.setName(customer.getName());
             CustomerDetailResponse customerDetailRes = new CustomerDetailResponse();
             customerDetailRes.setAdult(customerDetail.isAdult());
             customerDetailRes.setCustomerDetailId(customerDetail.getCustomerDetailId());
             customerDetailRes.setJenisKelamin(customerDetail.getJenisKelamin());
             customerDetailRes.setNoKTP(customerDetail.getNoKTP());
             customerDetailRes.setTglLahir(customerDetail.getTglLahir() != null ? UtilityConstant.dateFormat.format(customerDetail.getTglLahir()) : null);
-            customerResponse.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
+            customerRequest.setCustomerDetail(customerDetailRes != null ? customerDetailRes : null);
             List<CustomerAlamat> customerAlamats = customerAlamatDAO.findOneIdCustomerAlamatNotPK(customer.getCustomerId());
             if (!customerAlamats.isEmpty()) {
-                customerResponse.setCustomerAlamats(customerAlamats);
+                customerRequest.setCustomerAlamats(customerAlamats);
             }
             LOGGER.info(INFO_SERVICE.END_SERVICE.getDescription(methodName));
-            return new DataApiResponse(true, customerResponse);
+            return new DataApiResponse(true, customerRequest);
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error(INFO_SERVICE.END_SERVICE.getDescription(methodName));
@@ -146,7 +149,7 @@ public class CustomerService {
         }
     }
 
-    public DataApiResponse saveCustomerAndDetail(CustomerRequest customerRequest) {
+    public DataApiResponse saveCustomerAndDetail(com.hibernatetutorial.demo.payload.request.CustomerRequest customerRequest) {
         Class methodName = new Object() {}.getClass();
         LOGGER.info(INFO_SERVICE.START_SERVICE.getDescription(methodName));
         try {
@@ -260,16 +263,22 @@ public class CustomerService {
         }
     }
 
-    public DataApiResponse updateCustomerByCustomerId(Long idCustomer, CustomerResponse customerResponse){
+    public DataApiResponse updateCustomerByCustomerId(Long idCustomer, com.hibernatetutorial.demo.payload.request.frontend.CustomerRequest customerRequest){
         Customer customer = customerDAO.findByIdCustomer(idCustomer);
         if(customer!=null){
             CustomerDetail customerDetail = customerDetailDAO.findByIdCustomerDetail(customer.getCustomerDetailId());
             if(customerDetail!=null){
                 customer.setCustomerId(idCustomer);
-                customer.setEmail(customerResponse.getEmail());
-                customerDAO.saveOrUpdate(customer);
+                customer.setName(customerRequest.getName());
+                customer.setEmail(customerRequest.getEmail());
+                customerDetail.setNoKTP(customerRequest.getNoKTP());
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                Date tempDate;
+
+//                customerDetail.setTglLahir(tempDate);
+                customerDAO.update(customer);
                 customerDetailDAO.saveOrUpdate(customerDetail);
-                return new DataApiResponse(true,"Success Saving");
+                return new DataApiResponse(true,"Success Saving",new Gson().toJson(customerRequest));
             }
         }
         return new DataApiResponse(false,"Customer Not Found!");

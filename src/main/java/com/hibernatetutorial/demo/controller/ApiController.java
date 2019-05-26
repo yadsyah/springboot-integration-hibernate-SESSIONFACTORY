@@ -2,12 +2,11 @@ package com.hibernatetutorial.demo.controller;
 
 import com.hibernatetutorial.demo.entity.Customer;
 import com.hibernatetutorial.demo.payload.request.CustomerAlamatRequest;
-import com.hibernatetutorial.demo.payload.request.CustomerRequest;
 import com.hibernatetutorial.demo.constant.UtilityConstant;
 import com.hibernatetutorial.demo.dao.BankAccountDAO;
 import com.hibernatetutorial.demo.dao.CustomerDAO;
 import com.hibernatetutorial.demo.entity.BankAccount;
-import com.hibernatetutorial.demo.payload.response.CustomerResponse;
+import com.hibernatetutorial.demo.payload.request.frontend.CustomerRequest;
 import com.hibernatetutorial.demo.payload.response.global.DataApiResponse;
 import com.hibernatetutorial.demo.repositoryjpa.CustomerRepositoryJPA;
 import com.hibernatetutorial.demo.service.CustomerService;
@@ -25,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.validation.Valid;
-import javax.xml.crypto.Data;
 
 @CrossOrigin
 @RestController
@@ -107,7 +105,7 @@ public class ApiController {
 
     @CrossOrigin
     @PostMapping(value = "/customer", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> saveCustomerAndDetail(@Valid @RequestBody CustomerRequest customer) {
+    public ResponseEntity<?> saveCustomerAndDetail(@Valid @RequestBody com.hibernatetutorial.demo.payload.request.CustomerRequest customer) {
         try {
             DataApiResponse response = customerService.saveCustomerAndDetail(customer);
             if (response.isSuccess()) {
@@ -204,9 +202,9 @@ public class ApiController {
     }
 
     @PostMapping(value = "/update/{customerId}",consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateCustomer(@PathVariable(value = "customerId")Long customerId, @RequestBody CustomerResponse customerResponse){
+    public ResponseEntity<?> updateCustomer(@PathVariable(value = "customerId")Long customerId, @RequestBody CustomerRequest customerRequest){
         try{
-            DataApiResponse apiResponse = customerService.updateCustomerByCustomerId(customerId,customerResponse);
+            DataApiResponse apiResponse = customerService.updateCustomerByCustomerId(customerId, customerRequest);
             return ResponseEntity.ok(apiResponse);
         } catch(Exception e){
             e.printStackTrace();

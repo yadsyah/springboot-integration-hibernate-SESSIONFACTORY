@@ -83,8 +83,8 @@ public class DemoApplication {
         commonsRequestLoggingFilter.setIncludeClientInfo(true);
         commonsRequestLoggingFilter.setIncludeQueryString(true);
         commonsRequestLoggingFilter.setIncludePayload(true);
-        commonsRequestLoggingFilter.setIncludeHeaders(false);
-        commonsRequestLoggingFilter.setMaxPayloadLength(1000);
+        commonsRequestLoggingFilter.setIncludeHeaders(true);
+        commonsRequestLoggingFilter.setMaxPayloadLength(9000);
         return commonsRequestLoggingFilter;
     }
 

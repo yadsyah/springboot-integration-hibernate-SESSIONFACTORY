@@ -195,10 +195,10 @@ public class CustomerDAO {
         return null;
     }
 
-    public void saveOrUpdate(Customer customer){
+    public void update(Customer customer){
         try{
             Session session = getSessionFactory();
-            session.saveOrUpdate(customer);
+            session.update(customer);
         } catch (Exception e){
             e.printStackTrace();
         }
